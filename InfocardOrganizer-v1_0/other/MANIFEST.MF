@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.6.2
+Created-By: 1.5.0_06-b05 (Sun Microsystems Inc.)
+Main-Class: org.infoml.infocardOrganizer.MainFrame
+Class-Path: ext/jaxb-xjc.jar ext/jax-qname.jar ext/jaxb-api.jar ext/jaxb-impl.jar ext/jaxb-libs.jar ext/jaxp ext/api.jar ext/namespace.jar ext/relaxngDatatype.jar ext/sax.jar ext/xercesImpl.jar ext/xsdlib.jar ext/saxon9.jar ext/saxon9-dom.jar ext/groovy-all-1.5.7.jar
+

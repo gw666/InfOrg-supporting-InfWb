@@ -1,0 +1,5 @@
+javax.xml
+javax.xml.bind
+javax.xml.bind.helpers
+javax.xml.bind.util
+javax.xml.namespace

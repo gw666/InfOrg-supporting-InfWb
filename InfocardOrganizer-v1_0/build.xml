@@ -1,0 +1,259 @@
+<?xml version="1.0" standalone="yes"?>
+
+<project default="run">
+
+    <description>
+    
+    IMPORTANT: This is InfOrg-110619-InfWb-v1_0_1. Its SOLE PURPOSE is to
+    create a JAR file that Infocard Workbench uses as a library to access
+    various classes and methods for creating and editing infoml elements.
+    	
+    Run the 'standalone' Ant task, then copy the InfocardOrganizer-((version)).jar
+    file and rename it to be 'infoml-classes.jar'.
+    	
+    ---------------------- original message -----------------------
+    	
+    This build file is for Infocard Organizer; see below for
+    the current version number. This script depends on having JAXB
+    (Java Architecture for XML Binding) version 1.0.6 present 
+    (https://jaxb.dev.java.net/1.0/). Set the jaxb.home property to the 
+    pathname of the folder containing JAXB. NOTE: This file should be
+    part of the full release of Infocard Organizer. If this is the case,
+    JAXB 1.0.6 is already present and in the correct location.
+    	
+    To run targets from this file, you must have a recent version of the
+    Ant tool (http://ant.apache.org/).
+        
+    This version also uses the Saxon9 XSLT 2.0 processor.
+
+    The following targets are of interest:
+
+        run (default): runs/launches/executes Infocard Organizer
+            (NOTE: You must first run "ant compile" and "ant compile-schema",
+    		 as necessary.)
+
+        compile: compiles the project
+	    (NOTE: You must run "ant compile" manually immediately after
+	     you make any changes to the source code.)
+    	
+    	compile-schema: compiles the infomlfile.xsd schema 
+    	    (NOTE: You must run "ant compile-schema" manually immediately after
+    	     you make any changes to the schema.)
+
+        standalone: creates a stand-alone version of Infocard Organizer
+        
+        javadoc: creates Javadocs for Infocard Organizer
+    	
+    	slimmer: for developers only
+
+    </description>
+
+    <!-- CHANGE THE VALUE OF jaxb.home TO MATCH YOUR SYSTEM -->
+    <property name="jaxb.home" value="jaxb-ri-1.0.6"/>
+
+    <property name="project.version" value="2011_06_19"/>
+    <property name="standalone" value="STANDALONE-copy to disk drive FIRST"/>
+    	<property name="jarfile.name"
+        value="InfocardOrganizer-v1_0-${project.version}"/>
+    
+
+
+    <path id="classpath">
+        <pathelement path="source"/>
+        <pathelement path="classes"/>
+        <filelist dir="${jaxb.home}/lib"
+            files="jax-qname.jar,jaxb-api.jar,jaxb-impl.jar,
+            jaxb-libs.jar,jaxb-xjc.jar,jaxp-api.jar,namespace.jar,relaxngDatatype.jar,
+            sax.jar,xercesImpl.jar,xsdlib.jar"
+        />
+        <filelist dir="other" files="saxon9.jar,saxon9-dom.jar,groovy-all-1.5.7.jar"/>
+    </path>
+
+    <taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+        <classpath refid="classpath"/>
+    </taskdef>
+
+    <target name="compile-all" depends="clean, compile-schema"
+        description="Compile all Java source files, including schema source files">
+        <echo message="Compiling all the java source files..."/>
+        <mkdir dir="classes"/>
+        <javac destdir="classes" debug="on">
+            <src path="src"/>
+            <classpath refid="classpath"/>
+        </javac>
+    	<antcall target="add-necessaries-to-classes-dir"/>
+    </target>
+	
+    <target name="compile-schema"
+        description="Compiles the schema into Java classes">
+        <echo message="Compiling the schema into Java classes..."/>
+        <delete dir="gen-src"/>
+        <mkdir dir="gen-src"/>
+        <xjc schema="infomlFile.xsd" package="org.infoml.jaxb"
+            target="gen-src">
+            <produces dir="gen-src/org.infoml.jaxb"
+                includes="**/*.java"/>
+        </xjc>
+        <mkdir dir="classes"/>
+    	<javac destdir="classes" debug="on">
+            <src path="gen-src"/>
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+	<target name="add-necessaries-to-classes-dir"
+		description="Adds files from schema compilation necessary for JAXB to work">
+        <copy todir="classes">
+            <fileset dir="gen-src">
+                <include name="**/*.properties"/>
+                <include name="**/bgm.ser"/>
+            </fileset>
+        </copy>
+	</target>
+
+    <target name="compile"
+        description="Compile the project source files, BUT NOT THE SCHEMA SOURCE FILES">
+        <echo message="Compiling the java source files (but not the schema source files)..."/>
+        <echo message="    (if errors occur, run 'ant compile-scheme')"/>
+        <mkdir dir="classes"/>
+        <javac destdir="classes" debug="on">
+            <src path="source"/>
+            <classpath refid="classpath"/>
+        </javac>
+    	<antcall target="add-necessaries-to-classes-dir"/>
+    </target>
+
+    <target name="clean"
+        description="Deletes all the generated artifacts.">
+        <delete dir="dev-docs/app-api"/>
+        <delete dir="classes"/>
+        <delete dir="gen-src"/>
+    </target>
+
+    <target name="compile-run" depends="compile"
+        description="compiles and runs Infocard Organizer">
+        <echo message="NOTE: If Infocard Organizer does not run, you may need to run 'ant compile-schema', then 'ant'."/>
+        <echo message="Running Infocard Organizer..."/>
+        <java classname="org.infoml.infocardOrganizer.MainFrame" fork="true">
+            <classpath refid="classpath"/>
+        </java>
+    </target>
+
+    <target name="run" description="Run Infocard Organizer">
+        <echo message="NOTE: If Infocard Organizer does not run, you may need to run 'ant compile-schema' and/or 'ant compile', then 'ant'."/>
+        <echo message="Running Infocard Organizer..."/>
+        <java classname="org.infoml.infocardOrganizer.MainFrame"
+            fork="true">
+            <classpath refid="classpath"/>
+        </java>
+    </target>
+
+    <target name="javadoc"
+        description="generates javadoc for Infocard Organizer">
+        <echo message="Generating javadoc for Infocard Organizer..."/>
+        <delete dir="dev-docs/app-api"/>
+        <mkdir dir="dev-docs/app-api"/>
+        <javadoc destdir="dev-docs/app-api" windowtitle="Infocard Organizer">
+            <fileset dir="."
+                includes="source/org/infoml/infocardOrganizer/*.java,
+            	gen-src/org/infoml/jaxb/*.java, gen-src/org/infoml/jaxb/impl/*.java"
+            />
+        </javadoc>
+    	<echo message="(NOTE: You can ignore all 'javax.xml.bind' error messages)"/>
+    </target>
+
+    <!-- standalone task: creating a double-clickable version of software
+    Once finished, the standalone folder can be given to others; double-click
+        the jar file to begin execution. -->
+
+    <!-- <target name="standalone-clean"> -->
+    <target name="standalone-clean">
+    	<echo  message = " (NOTE: You must compile both the schema and the project first.)"/>
+        <delete dir="${standalone}"/>
+    </target>
+
+    <target name="standalone-setup" depends="standalone-clean">
+
+        <!-- DIRECTORY docs -->
+        <mkdir dir="${standalone}/docs"/>
+        <copy file="docs/InfOrg v1_0 docs supplement.rtf" todir="${standalone}/docs"/>
+        <copy file="docs/InfOrg v0_7 docs.rtf" todir="${standalone}/docs"/>
+        <copy file="docs/InfOrg v0_7 bugs.rtf" todir="${standalone}/docs"/>
+        <copy file="docs/InfOrg v0_7 release notes.rtf" todir="${standalone}/docs"/>
+        <copy file="docs/InfOrg v0_7 QUICK START.rtf" todir="${standalone}/docs"/>
+        <copy file="docs/InfOrg v0_7 CHANGELOG.txt" todir="${standalone}/docs"/>
+ 
+        <!-- DIRECTORY ext -->
+        <mkdir dir="${standalone}/ext"/>
+    	
+    	<!--   remember: if you add/change jars, you must change the manifest -->
+    	
+        <copy todir="${standalone}/ext">
+            <fileset dir="${jaxb.home}/lib" includes="jaxb-xjc.jar,jax-qname.jar,
+                jaxb-api.jar,jaxb-impl.jar,jaxb-libs.jar,jaxp-api.jar,
+                namespace.jar,relaxngDatatype.jar,sax.jar,xercesImpl.jar,
+                xsdlib.jar"/>
+        </copy>
+        <copy todir="${standalone}/ext">
+            <fileset dir="other" includes="saxon9.jar,saxon9-dom.jar,groovy-all-1.5.7.jar"/>
+        </copy>
+
+        <!-- DIRECTORY resources -->
+        <mkdir dir="${standalone}/resources"/>
+        <copy todir="${standalone}/resources">
+            <fileset dir="resources" includes="*.gif"/>
+        </copy>
+
+        <!-- DIRECTORY sample-documents -->
+        <mkdir dir="${standalone}/sample-documents"/>
+        <copy todir="${standalone}/sample-documents">
+            <fileset dir="sample-documents" includes="*.xml"/>
+        </copy>
+
+        <!-- DIRECTORY scripts -->
+        <mkdir dir="${standalone}/scripts/supportfiles"/>
+        <copy todir="${standalone}/scripts/supportfiles">
+            <fileset dir="scripts/supportfiles" includes="*.xsl" />
+        </copy>
+
+        <mkdir dir="${standalone}/scripts/exports"/>
+        <copy todir="${standalone}/scripts/exports">
+            <fileset dir="scripts/exports" includes="*.groovy" />
+        </copy>
+
+        <!-- INDIVIDUAL FILES in root directory  -->
+    	
+    	<!--   remember: if you add/change jars, you must change the manifest -->
+        <copy file="other/MANIFEST.MF" todir="${standalone}"/>
+    	
+    	<copy file="run.bat" todir="${standalone}"/>
+        <copy file="build.xml" todir="${standalone}"/>
+        <copy file="infomlFile.xsd" todir="${standalone}"/>
+    	<copy file="COPYING" todir="${standalone}"/>
+        <copy file="README" todir="${standalone}"/>
+    	
+    </target>        <!-- END OF TASK standalone-setup -->
+
+    <target name="standalone" depends="standalone-setup">
+    	<!-- create the jar file for Infocard Organizer -->
+        <jar destfile="${standalone}/${jarfile.name}.jar" compress="false"
+            manifest="other/MANIFEST.MF">
+            <fileset dir="classes"/>
+        </jar>
+    </target>
+	
+    <target name="slimmer"
+        description="Used before giving InfOrg workspace to someone else">
+        <delete dir="classes"/>
+        <delete dir="gen-src"/>
+        <delete dir="test-output"/>
+    	<delete file="infocardDataBase"/>
+    	<delete file="nicknames"/>
+    	<delete file="path"/>
+    	<delete file="setup"/>
+    	<delete file="._DS_Store"/>
+    </target>
+
+
+
+</project>

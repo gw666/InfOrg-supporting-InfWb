@@ -1,0 +1,848 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    
+VERSION: 1.00
+
+LAST MODIFIED: 11/4/2010
+
+GLOBAL NOTES:
+
+
+* Where present, the value of every owner attribute should be a valid infomlRI string (which is
+  defined so as to be in-the-world globally unique).
+  
+CHANGE NOTES:
+
+    11/4/10: changed schema version to 1.00; made this schema required for versions 1.00
+    through 1.09; no changes made to schema except version number
+
+    090611: changed schema version to 0.90; made this schema required for versions 0.90
+    through 0.99
+
+    090114: within Agent, last [name] element changed to surname 
+
+    080927: removed simpleDateType; in dateType, removed "none" value; in richPointerType,
+     added the following attributes: qualities; previousCurrentSeparator
+
+    080415: added qualities and previousCurrentSeparator attributes to richPointerType
+
+	080303: moved title element to be a child of data element; deleted enclosingLocationType
+
+    071122: deleted axisType; fixed consistency errors in locationType
+
+    071120: made location/extendedLocation optional (was required in 0.881); deleted
+    container/location element (which duplicated sibling location element)
+
+    070202: changed various "key" element to "tag" (to be exact, key, dvprKey, userKey, 
+    dvprKeyToRemove, and userKeyToRemove; added "bce" to date types (for year dates before 1 A.D.)
+    
+    061007: changed cardId from element to (attribute of infoml element) - - now this *IS* an ID field
+
+060224: added richPointerType, deleted richTextWithNameInforiSameparaType and
+    richTextWithNameInforiType
+
+051226b: expanded the concept of a point within a container to include points defined by multiple
+    axes (e.g., reel 3, frame 2162); applied this to locationType; deleted enclosingLocationType,
+    because it is no longer needed; changed enclosingContainer to enclosingSource
+
+051226a: version before changes in 051226b
+
+051028: corrected a bug with text fields by adding 'mixed="true"' to simpleRichTextWithSeparatorType
+
+050701: changed structure of locationType, enclosingSource
+
+050613: moved notes1 and notes2 into contentAgentContainerLocationType; moved sameParaAsPrevious
+to richTextWithNameInforiSameparaType (was richTextWithNameInfoRiType); reorganized elements
+alphabetically
+
+050602: added sameParaAsPrevious, treatPointersAs attributes
+
+050508: added tables, poems as p-level content types
+
+050417: Multiple changes and simplifications.
+
+050415: Slight change to addedPtrType. Changed "appended..." elements to "added...". Upgraded title and
+addedTitle elements to have rich-text content.
+
+050414: Implemented developerPointers and userPointers.
+
+050413: Reverted to a previous implementation of richTextType (050412_FLAWED). Simplified names of
+pointer types. Added new types of pointers for users and developers.
+
+050412: Fixed richTextType to handle paragraph elements properly.
+
+TO-DO: create rich-text list 
+  -->
+<xsd:schema xmlns="http://infoml.org/infomlFile" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://infoml.org/infomlFile" elementFormDefault="qualified">
+    <!-- -->
+    <!-- -->
+    <!-- -->
+    <!-- ##################################################### -->
+    <!-- ##  infomlFile and infomlType top-level elements  ### -->
+    <!-- ##################################################### -->
+    <!-- -->
+    <xsd:element name="infomlFile">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="infoml" type="infomlType" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="title" type="nonnullTokenType" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="infomlType">
+        <xsd:sequence>
+            <!-- data: contains content, agent, container, and location -->
+            <xsd:element name="data" type="contentAgentContainerLocationType" minOccurs="0"/>
+            <xsd:element name="selectors" minOccurs="0" type="selectorsType"/>
+            <xsd:element name="properties" type="propertiesType" minOccurs="0"/>
+            <!-- comment-on: this infocard "belongs to" all the infocards pointed to by this -->
+            <xsd:element name="commentOn" type="pointersType" minOccurs="0"/>
+            <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+            <!-- elements added by developer -->
+            <xsd:element name="dvprNotes" type="richTextWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="dvprPointers" type="extendedPointersWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="dvprXml" type="anyWithOwnerType"
+                minOccurs="0" maxOccurs="unbounded"/>
+            <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+            <!-- elements added by user -->
+            <xsd:element name="userNotes" type="richTextWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="userPointers" type="extendedPointersWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <!-- cardId: this is an ID attribute whose value is an infoRI string -->
+        <xsd:attribute name="cardId" type="idInfoRIType" use="required"/>
+        <!-- encoding: string identifying character set used -->
+        <xsd:attribute name="encoding" type="nonnullTokenType" use="required"/>
+        <xsd:attribute name="version" type="versionType" use="required"/>
+        <!-- based-on: points to infocard that current infocard is based on -->
+        <xsd:attribute name="basedOn" type="infoRIType" use="optional"/>
+        <!-- treatPointersAs: if value is "contents", treat as if contents of current icard
+        are equivalent to concatenation of contents of all cards pointed to, as influenced
+        by sameParaAsPrevious attribute; if value is "pointers", treat pointers normally .-->
+        <xsd:attribute name="treatPointersAs" type="treatPointersType" default="pointers"/>
+        <!--  -->
+    </xsd:complexType>
+    <!-- -->
+    <!-- -->
+    <!-- -->
+    <!-- ##################################################### -->
+    <!-- ##           Major infocard subelements           ### -->
+    <!-- ##################################################### -->
+    <!-- -->
+    <xsd:complexType name="agentType">
+        <xsd:annotation>
+            <xsd:documentation>Used to describe any person, group, or entity associated with the
+                enclosing data element; the role attribute describes the agent's role: e.g., author,
+                editor, accountant, etc. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:choice>
+                <xsd:sequence>
+                    <xsd:element name="prefix" type="nonnullTokenType" minOccurs="0"
+                        maxOccurs="unbounded"/>
+                    <xsd:element name="first" type="nonnullTokenWithSeparatorType" minOccurs="0"/>
+                    <xsd:element name="middle" type="nonnullTokenWithSeparatorType" minOccurs="0"
+                        maxOccurs="unbounded"/>
+                    <xsd:element name="surname" type="nonnullTokenWithSeparatorType"/>
+                    <xsd:element name="suffix" type="nonnullTokenWithSeparatorType" minOccurs="0"
+                        maxOccurs="unbounded"/>
+                </xsd:sequence>
+                <xsd:sequence>
+                    <xsd:element name="corporateName" type="simpleRichTextType"/>
+                    <xsd:element name="corporateSuffix" type="simpleRichTextWithSeparatorType"
+                        minOccurs="0" maxOccurs="unbounded"/>
+                </xsd:sequence>
+            </xsd:choice>
+            <xsd:element name="contactInfo" type="contactInfoType" minOccurs="0"
+                maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="role" type="agentRoleType"/>
+        <!-- custom-role: used to describe a role not in the predefined list; valid only
+          when the role attribute = "custom" -->
+        <xsd:attribute name="customRole" type="nonnullTokenType"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="agentContainerLocationType">
+        <xsd:annotation>
+            <xsd:documentation>Describes a specific container, a location within that container, and
+                agents (author, editor, etc.) associated with the container.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="agent" type="agentType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="container" type="containerType" minOccurs="0"/>
+            <xsd:element name="location" type="locationType" minOccurs="0"/>
+            <!-- enclosingSource: Used to document a larger container that
+            contains the content. For example, if the content is from an article
+            within a book, use enclosingSource to document the book. -->
+            <xsd:element name="enclosingSource" type="enclosingSourceType" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="category" use="optional"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="enclosingSourceType">
+        <xsd:annotation>
+            <xsd:documentation>Describes an enclosing container (e.g., a journal defined by volumes
+                and issues)</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="agent" type="agentType" minOccurs="0" maxOccurs="unbounded"/>
+            <!-- NOTE: The location is contained within the container element. -->
+            <xsd:element name="container" type="containerType" minOccurs="0"/>
+            <xsd:choice minOccurs="0">
+                <xsd:element name="location" type="locationType" minOccurs="0"/>
+                <xsd:element name="complexLocation" type="complexPointType"/>
+            </xsd:choice>
+            <!-- enclosingSources can be nested multiple levels (although two or more levels of nesting is uncommon). -->
+            <xsd:element name="enclosingSource" type="enclosingSourceType" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="category" use="optional"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="containerType">
+        <xsd:annotation>
+            <xsd:documentation>Used to specify the name (in multiple parts--e.g., title and
+                subtitle) of the entity that contains the associated content (e.g., book, movie,
+                article, music album).</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="containerNamePart" type="simpleRichTextWithSeparatorType"
+                maxOccurs="unbounded"/>
+            <!-- date: multiple dates may be associated with a given container;
+              use the role attribute to describe the value of this element-->
+            <xsd:element name="date" type="dateWithRoleType" minOccurs="0" maxOccurs="unbounded"/>
+            <!-- nameAppendedText: used to cover various miscellaneous
+              situations that require unstyled text to be appended-->
+            <xsd:element name="nameAppendedText" type="simpleRichTextWithSeparatorType"
+                minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="category" use="optional"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="contentAgentContainerLocationType">
+        <xsd:annotation>
+            <xsd:documentation>Used to encapsulate one piece of content with all the known
+                information about it, including (optionally) agent and location information for each
+                container associated with the content. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <!-- title: an InfoML-standard property, usually a short human-readable text
+                string that serves as the title for the infocard's content (and/or pointers)-->
+            <xsd:element name="title" type="simpleRichTextType" minOccurs="0"/>
+            <xsd:element name="content" type="richTextWithExactType" minOccurs="0"/>
+            <xsd:element name="pointers" type="extendedPointersType" minOccurs="0"/>
+            <!-- contentFragments: an optional user-created subset of the icard's contents;
+            used as a "reminder" substitute for full contents when space is limited -->
+            <xsd:element name="contentFragments" minOccurs="0" type="multipleLinesType"/>
+            <xsd:element name="notes1" type="richTextType" minOccurs="0"/>
+            <xsd:element name="notes2" type="richTextType" minOccurs="0"/>
+            <xsd:choice minOccurs="0">
+                <xsd:element name="source" type="agentContainerLocationType"/>
+                <xsd:element name="extendedSource" type="extendedSourceType"/>
+            </xsd:choice>
+            <xsd:element name="referenceAppendedText" minOccurs="0" type="richTextType"/>
+            <xsd:element name="userCreatedCitation" minOccurs="0" type="richTextType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="locationType">
+        <xsd:annotation>
+            <xsd:documentation>Fully describes the location of content within the container as
+                either a point or range within the innermost subcontainer (e.g., pages xxiv through
+                xxvii or page 4)</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <!-- DIFF 0.85: defined as any combination of range and point elements -->
+            <!-- DIFF 0.87: defined as a range *or* point element -->
+            <xsd:choice>
+                <xsd:element name="range" type="rangeType"/>
+                <xsd:element name="point" type="pointType"/>
+                <xsd:element name="complexRange" type="complexRangeType"/>
+                <xsd:element name="complexPoint" type="complexPointType"/>
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="pointersType">
+        <xsd:annotation>
+            <xsd:documentation>An ordered sequence of text-annotated pointers to other infocards,
+                along with attribute data, as follows--notes: user-defined string.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="parentPtr" type="richPointerType" minOccurs="0"/>
+            <xsd:element name="ptr" type="richPointerType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="notes" type="nonnullTokenType" use="optional"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="propertiesType">
+        <xsd:annotation>
+            <xsd:documentation>Contains various key-value pairs that are associated with the current
+                infocard. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="dvprTitle" type="simpleRichTextWithOwnerReplaceType" minOccurs="0"/>
+            <xsd:element name="userTitle" type="simpleRichTextWithOwnerReplaceType" minOccurs="0"/>
+            <xsd:element name="cardAuthor" type="agentType" minOccurs="0"/>
+            <xsd:element name="dateCreated" type="dateType" minOccurs="0"/>
+            <xsd:element name="dateModified" type="dateType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="selectorsType">
+        <xsd:annotation>
+            <xsd:documentation>Contains zero or more selectors (defined as "a string that, by its
+                presence, can be used to select certain infocards and reject all other infocards").
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <!-- category: used in conjunction with a third-party-created set
+            of category options; the owner attribute identifies the universe of
+            category options, and the value stored here must be one of those
+            options-->
+            <xsd:element name="category" type="categoryType" minOccurs="0"/>
+            <xsd:element name="dvprCategory" type="nonnullTokenWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="userCategory" type="nonnullTokenWithOwnerReplaceType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <!--  -->
+            <!-- developer and user IDs: this string should uniquely
+              identify the current infocard within the ID system created by the owner;
+              for a given owner, only one such ****Id element should exist. -->
+            <xsd:element name="dvprId" type="nonnullTokenWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="userId" type="nonnullTokenWithOwnerReplaceType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <!--  -->
+            <!-- tag: an InfoML-standard selector, used as a keyword; can contain any
+              characters that are legal for the infocard's encoding system. -->
+            <xsd:element name="tag" type="nonnullTokenType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="dvprTag" type="nonnullTokenType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="userTag" type="nonnullTokenType" minOccurs="0" maxOccurs="unbounded"/>
+            <!--  -->
+            <!-- ****TagToRemove: meant to be added by a third-party owner; names
+              a tag element that the third party (identified by the owner attribute) wants
+              to ignore (i.e., to "remove") -->
+            <xsd:element name="dvprTagToRemove" type="nonnullTokenWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="userTagToRemove" type="nonnullTokenWithOwnerType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <!--  -->
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <!-- ########################## -->
+    <!-- ##    TEXT DATA TYPES   ## -->
+    <!-- ########################## -->
+    <!--  -->
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <!-- various types for defining content        -->
+    <!-- (text with limited HTML-style markup)     -->
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="aType" mixed="true">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="em" type="emType"/>
+            <xsd:element name="strong" type="strongType"/>
+            <xsd:element name="code" type="codeType"/>
+            <xsd:element name="pre" type="xsd:string"/>
+        </xsd:choice>
+        <xsd:attribute name="href" type="nonnullTokenType" use="optional"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="codeType" mixed="true">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="em" type="emType"/>
+            <xsd:element name="strong" type="strongType"/>
+            <xsd:element name="a" type="aType"/>
+            <xsd:element name="pre" type="xsd:string"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="complexPointType">
+        <xsd:annotation>
+            <xsd:documentation>Describes a point (e.g., a location within a container) as an ordered
+                list of unit/value pairs</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="axis" type="pointType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="complexRangeType">
+        <xsd:annotation>
+            <xsd:documentation>Describes a range of complex points</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="begin" type="complexPointType" maxOccurs="unbounded"/>
+            <xsd:element name="end" type="complexPointType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="emType" mixed="true">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="em" type="emType"/>
+            <xsd:element name="strong" type="strongType"/>
+            <xsd:element name="code" type="codeType"/>
+            <xsd:element name="a" type="aType"/>
+            <xsd:element name="pre" type="xsd:string"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="pType" mixed="true">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="em" type="emType"/>
+            <xsd:element name="strong" type="strongType"/>
+            <xsd:element name="code" type="codeType"/>
+            <xsd:element name="pre" type="xsd:string"/>
+            <xsd:element name="a" type="aType"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="strongType" mixed="true">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="em" type="emType"/>
+            <xsd:element name="code" type="codeType"/>
+            <xsd:element name="a" type="aType"/>
+            <xsd:element name="pre" type="xsd:string"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <!--                           -->
+    <!-- types for defining tables -->
+    <!--                           -->
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="alignType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="top"/>
+            <xsd:enumeration value="bottom"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="captionType">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="align" type="alignType"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="tableType">
+        <xsd:sequence>
+            <xsd:element name="caption" type="captionType" minOccurs="0"/>
+            <xsd:element name="tr" type="tableRowType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="tableRowType">
+        <xsd:choice maxOccurs="unbounded">
+            <xsd:element name="th" type="xsd:string"/>
+            <xsd:element name="tr" type="xsd:string"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <!--  -->
+    <!--  -->
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <!-- ##################################################### -->
+    <!-- ##   REMAINING DATA TYPES (SORTED ALPHABETICALLY)  ## -->
+    <!-- ##################################################### -->
+    <!--  -->
+    <xsd:simpleType name="agentRoleType">
+        <xsd:annotation>
+            <xsd:documentation/>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="custom"/>
+            <xsd:enumeration value="author"/>
+            <xsd:enumeration value="card creator"/>
+            <xsd:enumeration value="editor"/>
+            <xsd:enumeration value="series editor"/>
+            <xsd:enumeration value="volume editor"/>
+            <xsd:enumeration value="publisher"/>
+            <xsd:enumeration value="agent"/>
+            <xsd:enumeration value="chair"/>
+            <xsd:enumeration value="producer"/>
+            <xsd:enumeration value="writer/director"/>
+            <xsd:enumeration value="director"/>
+            <xsd:enumeration value="executive producer"/>
+            <xsd:enumeration value="distributor"/>
+            <xsd:enumeration value="actor"/>
+            <xsd:enumeration value="musician"/>
+            <xsd:enumeration value="singer"/>
+            <xsd:enumeration value="speaker"/>
+            <xsd:enumeration value="advisor"/>
+            <xsd:enumeration value="performer"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="categoryType">
+        <xsd:annotation>
+            <xsd:documentation/>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="content"/>
+            <xsd:enumeration value="pointers"/>
+            <xsd:enumeration value="custom"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="extendedSourceType">
+        <xsd:annotation>
+            <xsd:documentation>Used to handle situations where content associated with more than one
+                container (e.g., a quotation is found in book A but is attributed to book B). The
+                source element is the container where the content is actually found; the original
+                element is the true source of the content. In rare cases, a middle element be
+                necessary to describe an intermediate container. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="source" type="agentContainerLocationType"/>
+            <xsd:element name="middle" type="agentContainerLocationType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="foundIn" type="agentContainerLocationType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="contactInfoType">
+        <xsd:sequence>
+            <xsd:element name="localAddress" type="nonnullTokenType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="city" type="nonnullTokenType" minOccurs="0"/>
+            <xsd:element name="stateOrProvince" type="nonnullTokenType" minOccurs="0"/>
+            <xsd:element name="postalCode" type="nonnullTokenType" minOccurs="0"/>
+            <xsd:element name="country" type="nonnullTokenType" minOccurs="0"/>
+            <xsd:element name="email" type="nonnullTokenWithRoleType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="phone" type="nonnullTokenWithRoleType" minOccurs="0"
+                maxOccurs="unbounded"/>
+            <xsd:element name="other" type="nonnullTokenWithRoleType" minOccurs="0"
+                maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="dateType">
+    	<xsd:union memberTypes="xsd:date xsd:gYearMonth xsd:gYear xsd:dateTime">
+<!--    		<xsd:simpleType>-->
+<!--    			<xsd:restriction base="xsd:token">-->
+<!--    				<xsd:enumeration value="none"/>-->
+<!--    			</xsd:restriction>-->
+<!--    		</xsd:simpleType>-->
+    	</xsd:union>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="dateWithRoleType">
+        <xsd:simpleContent>
+            <xsd:extension base="dateType">
+                <xsd:attribute name="role" type="nonnullTokenType" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="extendedPointersType">
+        <xsd:annotation>
+            <xsd:documentation>An ordered sequence of text-annotated pointers to other infocards,
+                along with attribute data, as follows--name: see documentation; quality: arbitrary
+                string describing the ordering assumed to apply to this ordered sequence of
+                infocards; notes: user-defined string.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="pointersType">
+                <!-- type: was named "name" in version 0.85 - not sure change
+                is a good idea -->
+                <xsd:attribute name="type" type="nonnullTokenType" use="optional"/>
+                <xsd:attribute name="quality" type="nonnullTokenType" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="extendedPointersWithOwnerType">
+        <xsd:complexContent>
+            <xsd:extension base="extendedPointersType">
+                <xsd:attribute name="owner" type="infoRIType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="infoRIType">
+        <xsd:annotation>
+            <xsd:documentation>Valid values for elements of this type are in-the-entire-world
+                globally unique. See the InfoML Specification for details. </xsd:documentation>
+        </xsd:annotation>
+        <!-- NOTE: end of pattern line is ...(_[a-zA-Z0-9\.\-]+)?)?/>  -->
+        <xsd:restriction base="xsd:NCName">
+            <xsd:pattern
+                value="[a-zA-Z][a-zA-Z0-9\-]*(\.[a-zA-Z0-9\-]+){0,2}(_[a-zA-Z0-9\.\-]+(_[a-zA-Z0-9\.\-]+)?)?"
+            />
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="idInfoRIType">
+        <!-- NOTE: end of pattern line is ...(_[a-zA-Z0-9\.\-]+)?)?/>  -->
+        <xsd:restriction base="xsd:ID">
+            <xsd:pattern
+                value="[a-zA-Z][a-zA-Z0-9\-]*(\.[a-zA-Z0-9\-]+){0,2}(_[a-zA-Z0-9\.\-]+(_[a-zA-Z0-9\.\-]+)?)?"
+            />
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="multipleLinesType">
+        <xsd:sequence>
+            <xsd:element name="line" type="simpleRichTextType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="nonnullTokenType">
+        <xsd:annotation>
+            <xsd:documentation>Used for a token that must have at least one character 
+                in it.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:minLength value="1"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="nonnullTokenWithOwnerType">
+        <xsd:annotation>
+            <xsd:documentation>This type is used for non-null tokens that have a required 'owner'
+                attribute.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="nonnullTokenType">
+                <xsd:attribute name="owner" type="infoRIType" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="nonnullTokenWithOwnerReplaceType">
+        <xsd:annotation>
+            <xsd:documentation>This type is used for non-null tokens that have a required 'owner'
+                attribute.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="nonnullTokenType">
+                <xsd:attribute name="owner" type="infoRIType" use="required"/>
+                <xsd:attribute name="replaceOriginal" type="xsd:boolean" use="optional"
+                    default="false"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="nonnullTokenWithRoleType">
+        <xsd:annotation>
+            <xsd:documentation>This type is used for non-null tokens that have a required 'role'
+                attribute.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="nonnullTokenType">
+                <xsd:attribute name="role" type="nonnullTokenType" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="nonnullTokenWithSeparatorType">
+        <xsd:annotation>
+            <xsd:documentation>This type is used for non-null tokens that have a required
+                'preSeparator' attribute.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="nonnullTokenType">
+                <xsd:attribute name="preSeparator" type="nonnullTokenType" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="poemType">
+        <xsd:sequence>
+            <xsd:element name="title" type="multipleLinesType" minOccurs="0"/>
+            <xsd:element name="author" type="agentType" maxOccurs="unbounded"/>
+            <xsd:element name="stanza" type="multipleLinesType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="pointType">
+        <xsd:annotation>
+            <xsd:documentation>Used to specify a single value as part of describing the location of
+                content within the container; the unit attribute describes the unit of measure
+                (e.g., value = "xxix", NEEDS FIXING unit = "page").</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="unit" type="nonnullTokenType" use="optional"/>
+        <xsd:attribute name="value" type="nonnullTokenType" use="required"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="rangeType">
+        <xsd:annotation>
+            <xsd:documentation>Used to specify a range of values as part of describing the location
+                of content within the container; the unit attribute describes the unit of measure
+                (e.g., begin = "xxiv", end = "xxvii", unit = "page").</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="unit" type="nonnullTokenType" use="optional"/>
+        <xsd:attribute name="begin" type="nonnullTokenType" use="required"/>
+        <xsd:attribute name="end" type="nonnullTokenType" use="required"/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="richPointerType">
+        <xsd:annotation>
+            <xsd:documentation>Used to implement ptr elements. Subelements (i.e., text associated
+                with the ptr) are optional.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="p" type="simpleRichTextType"/>
+            <xsd:element name="quotation" type="simpleRichTextWithAuthorType"/>
+            <xsd:element name="poem" type="poemType"/>
+            <xsd:element name="table" type="tableType"/>
+        </xsd:choice>
+        <xsd:attribute name="name" type="nonnullTokenType" use="optional"/>
+        <xsd:attribute name="qualities" type="xsd:string"/>
+        <xsd:attribute name="targetId" type="infoRIType" use="required"/>
+        <!-- sameParaAsPrevious: if false, content of this icard should be preceded by a paragraph-
+                level break; if true, content should be treated as continuation of current paragraph -->
+        <xsd:attribute name="sameParaAsPrevious" type="xsd:boolean" default="true"/>
+        <!-- adjacentToPrevious: if true, content from both previous and current icards should
+                 be joined to create one continuous chunk of content -->
+        <xsd:attribute name="adjacentToPrevious" type="xsd:boolean" default="true"/>
+        <!-- previousCurrentSeparator: character(s) used to separate two adjacent chunks
+                 of content -->
+        <xsd:attribute name="previousCurrentSeparator" type="xsd:string" default=" "/>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="richTextType">
+        <xsd:annotation>
+            <xsd:documentation>A collection of text-related elements: paragraphs (simpleRichText
+                enclosed in a p element) quotations (simpleRichText with author information, often
+                formatted as being set apart from paragraphs of text), poems, and simple
+            tables.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice maxOccurs="unbounded">
+            <xsd:element name="p" type="simpleRichTextType"/>
+            <xsd:element name="quotation" type="simpleRichTextWithAuthorType"/>
+            <xsd:element name="poem" type="poemType"/>
+            <xsd:element name="table" type="tableType"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="richTextFragmentsType">
+        <xsd:sequence>
+            <xsd:element name="fragment" type="simpleRichTextType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="richTextWithExactType">
+        <xsd:annotation>
+            <xsd:documentation>multi-paragraph style text, plus an exact attribute (used to indicate
+                whether the text is an exact quotation or a paraphrase/summary</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="richTextType">
+                <xsd:attribute name="exact" type="xsd:boolean" default="true"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="richTextWithOwnerType">
+        <xsd:annotation>
+            <xsd:documentation>NEEDS DESCRIPTION</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="richTextType">
+                <xsd:attribute name="owner" type="infoRIType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="simpleRichTextType" mixed="true">
+        <xsd:annotation>
+            <xsd:documentation>Text that can contain the following styles: em (usually represented
+                as italics), strong (bold), code (monospace font), a (hyperlink), and pre
+                (preformatted, including multiple contiguous spaces and tab characters). Styles can
+                be nested within each other. This text is assumed to be in a single paragraph (i.e.,
+                containing no p elements).</xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice minOccurs="0">
+            <xsd:element name="em" type="emType"/>
+            <xsd:element name="strong" type="strongType"/>
+            <xsd:element name="code" type="codeType"/>
+            <xsd:element name="a" type="aType"/>
+            <xsd:element name="pre" type="xsd:string"/>
+        </xsd:choice>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="simpleRichTextWithAuthorType" mixed="true">
+        <xsd:complexContent>
+            <xsd:extension base="simpleRichTextType">
+                <xsd:attribute name="author" type="nonnullTokenType" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="simpleRichTextWithInfoType" mixed="true">
+        <xsd:complexContent>
+            <xsd:extension base="simpleRichTextType">
+                <!-- getInfoAt: used to point to an infocard containing data
+                on the origin of the rich-text content captured by this type -->
+                <xsd:attribute name="getInfoAt" type="infoRIType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="simpleRichTextWithOwnerType" mixed="true">
+        <xsd:complexContent>
+            <xsd:extension base="simpleRichTextType">
+                <xsd:attribute name="owner" type="infoRIType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="simpleRichTextWithOwnerReplaceType" mixed="true">
+        <xsd:complexContent>
+            <xsd:extension base="simpleRichTextType">
+                <xsd:attribute name="owner" type="infoRIType" use="required"/>
+                <xsd:attribute name="replaceOriginal" type="xsd:boolean" use="optional"
+                    default="false"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="simpleRichTextWithSeparatorType" mixed="true">
+        <xsd:complexContent>
+            <xsd:extension base="simpleRichTextType">
+                <!-- preSeparator: comes *before* the value of this element -->
+                <xsd:attribute name="preSeparator" type="nonnullTokenType" use="optional"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="treatPointersType">
+        <xsd:annotation>
+            <xsd:documentation/>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="pointers"/>
+            <xsd:enumeration value="content"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:simpleType name="versionType">
+        <xsd:restriction base="xsd:decimal">
+            <xsd:minInclusive value="1.00"/>
+            <xsd:maxInclusive value="1.09"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+    <xsd:complexType name="anyWithOwnerType">
+        <xsd:annotation>
+            <xsd:documentation>type used when a third-party developer
+            wants to insert custom XML</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="xsd:anyType">
+                <xsd:attribute name="owner" type="infoRIType" use="required"/>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <!-- ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ -->
+</xsd:schema>

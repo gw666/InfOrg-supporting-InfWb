@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<infomlFile xsi:schemaLocation="http://infoml.org/infomlFile     http://infoml.org/s/infomlFile.xsd" xmlns="http://infoml.org/infomlFile" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <infoml cardId="gw667_-463731871" encoding="UTF-8" version="0.88">
+        <data>
+            <pointers>
+                <ptr targetId="gw667_197"/>
+                <ptr targetId="gw667_200"/>
+                <ptr targetId="gw667_196"/>
+                <ptr targetId="gw667_203"/>
+                <ptr targetId="gw667_202"/>
+                <ptr targetId="gw667_210"/>
+            </pointers>
+        </data>
+    </infoml>
+    <infoml cardId="gw667_197" encoding="UTF-8" version="0.88">
+        <data>
+            <title>Four stages of psychotherapy</title>
+            <content exact="false">
+                <p>Jung delineated four stages: confession ("a cathartic recounting of personal
+ history"), elucidation (drawing attention to the transference and connecting it
+ to "its infantile origins"), education (moving the patient "into the realm of
+ the individual as an adapted social being"), and transformation (an optional
+ fourth step, usually accomplished in the second half of life).</p>
+            </content>
+            <source>
+                <agent role="card creator">
+                    <first>Gregg</first>
+                    <last>Williams</last>
+                </agent>
+                <container>
+                    <containerNamePart>Current Psychotherapies, 6th edition</containerNamePart>
+                </container>
+            </source>
+        </data>
+        <selectors>
+            <tag>Jung</tag>
+            <tag>stages of therapy</tag>
+            <tag>confession</tag>
+            <tag>elucidation</tag>
+            <tag>education</tag>
+            <tag>transformation</tag>
+            <tag>means of intervention</tag>
+        </selectors>
+        <properties>
+            <dateCreated>2008-07-26</dateCreated>
+        </properties>
+    </infoml>
+    <infoml cardId="gw667_200" encoding="UTF-8" version="0.88">
+        <data>
+            <title>Analysis of the transference</title>
+            <content exact="true">
+                <p>Jung described four stages of the analysis of the transference itself. In the
+ first stage, transference projections onto the therapist mirror the personal
+ history of the patient.... During the second stage of the analysis of the
+ transference, patients learn to discriminate between the personal and the
+ impersonal contents they project onto the therapist; they determine what belongs
+ to their own psyches and what belongs to the collective realms of culture and
+ archetype.... In the third stage of analyzing the transference, the personal
+ reality of the analyst becomes differentiated from the image assigned to the
+ healer by the patient.... In the final stage, as the transference is resolved
+ and greater self-knowledge and self-realization take place, a truer evaluation
+ of the therapist emerges, along with a more straightforward and empathic
+ connection between patient and therapist.</p>
+            </content>
+            <source>
+                <agent role="card creator">
+                    <first>Gregg</first>
+                    <last>Williams</last>
+                </agent>
+                <container>
+                    <containerNamePart>Current Psychotherapies, 6th edition</containerNamePart>
+                </container>
+            </source>
+        </data>
+        <selectors>
+            <tag>Jung</tag>
+            <tag>transference</tag>
+            <tag>therapist</tag>
+            <tag>means of intervention</tag>
+        </selectors>
+        <properties>
+            <dateCreated>2008-07-26</dateCreated>
+        </properties>
+    </infoml>
+    <infoml cardId="gw667_196" encoding="UTF-8" version="0.88">
+        <data>
+            <title>Goals of analytical psychotherapy</title>
+            <content exact="true">
+                <p>Analytical psychotherapy is, in essence, a dialogue between two people undertaken
+ to facilitate growth, healing, and a new synthesis of the patient's personality
+ and a higher level of functioning.... the principal name of psychotherapy is
+ ultimately neither curing nor alleviating patients' unhappiness but increasing
+ patients' self-respect and self-knowledge.... [as a result,] patients are more
+ likely to take personal responsibility for their behavior.</p>
+            </content>
+            <source>
+                <agent role="card creator">
+                    <first>Gregg</first>
+                    <last>Williams</last>
+                </agent>
+                <container>
+                    <containerNamePart>Current Psychotherapies, 6th edition</containerNamePart>
+                </container>
+            </source>
+        </data>
+        <selectors>
+            <tag>Jung</tag>
+            <tag>goals of therapy</tag>
+        </selectors>
+        <properties>
+            <dateCreated>2008-07-26</dateCreated>
+        </properties>
+    </infoml>
+    <infoml cardId="gw667_203" encoding="UTF-8" version="0.88">
+        <data>
+            <title>Long-term goals of Jungian psychotherapy</title>
+            <content exact="true">
+                <p>An analytical psychotherapist would agree with Freud that learning to love and to
+ work is the key to measuring the outcome of the successful analysis. Jungians
+ would also want to see their patients develop more complete knowledge of,
+ relationship with, and responsibility for all aspects of their psyche.</p>
+            </content>
+            <source>
+                <agent role="card creator">
+                    <first>Gregg</first>
+                    <last>Williams</last>
+                </agent>
+                <container>
+                    <containerNamePart>Current Psychotherapies, 6th edition</containerNamePart>
+                </container>
+            </source>
+        </data>
+        <selectors>
+            <tag>Jung</tag>
+            <tag>analysis</tag>
+            <tag>psyche</tag>
+            <tag>goals of therapy</tag>
+        </selectors>
+        <properties>
+            <dateCreated>2008-07-26</dateCreated>
+        </properties>
+    </infoml>
+    <infoml cardId="gw667_202" encoding="UTF-8" version="0.88">
+        <data>
+            <title>Applicability of Jungian psychotherapy</title>
+            <content exact="true">
+                <p>There is wide latitude in the type patients Jungian see in the form of therapy
+ they employ. Jungian therapists treat people of all ages and cultures, at all
+ levels of functioning. Analytical therapy is suitable for people facing the
+ common problems of life and accompanying symptoms of stress, anxiety,
+ depression, and low self-esteem. It is also useful in dealing with people who
+ have severe personality disorders or psychoses.... Patient who adapt well to
+ talking cures are those who have an ability for introspection and are able to
+ regress and yet maintain a working alliance with the therapist.</p>
+            </content>
+            <source>
+                <agent role="card creator">
+                    <first>Gregg</first>
+                    <last>Williams</last>
+                </agent>
+                <container>
+                    <containerNamePart>Current Psychotherapies, 6th edition</containerNamePart>
+                </container>
+            </source>
+        </data>
+        <selectors>
+            <tag>Jung</tag>
+            <tag>psychosis</tag>
+            <tag>talking cures</tag>
+            <tag>introspection</tag>
+            <tag>strengths and limitations</tag>
+        </selectors>
+        <properties>
+            <dateCreated>2008-07-26</dateCreated>
+        </properties>
+    </infoml>
+    <infoml cardId="gw667_210" encoding="UTF-8" version="0.88">
+        <data>
+            <title>Jungian analysis as an improvement over other therapies</title>
+            <content exact="true">
+                <p>Jungian psychology is especially inclusive, as its four stages of therapy cover
+ essential elements of the others' theories while adding a particular emphasis on
+ wholeness, completion, and individuation.</p>
+            </content>
+            <source>
+                <agent role="card creator">
+                    <first>Gregg</first>
+                    <last>Williams</last>
+                </agent>
+                <container>
+                    <containerNamePart>Current Psychotherapies, 6th edition</containerNamePart>
+                </container>
+            </source>
+        </data>
+        <selectors>
+            <tag>Jung</tag>
+            <tag>individuation</tag>
+            <tag>strengths and limitations</tag>
+        </selectors>
+        <properties>
+            <dateCreated>2008-07-26</dateCreated>
+        </properties>
+    </infoml>
+</infomlFile>
+
